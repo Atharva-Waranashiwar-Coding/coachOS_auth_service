@@ -1,1 +1,5 @@
-"""Request and response schemas for the auth service."""
+"""Pydantic schemas for the auth service."""
+
+from app.schemas.auth import TokenPayload, TokenResponse, UserCreate, UserLogin, UserRead
+
+__all__ = ["TokenPayload", "TokenResponse", "UserCreate", "UserLogin", "UserRead"]

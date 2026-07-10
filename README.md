@@ -61,12 +61,19 @@ The service exposes:
 docker compose up --build
 ```
 
-## Planned API
+## API
 
 - `POST /auth/signup`
 - `POST /auth/login`
 - `GET /auth/me`
+
+Future endpoints:
+
 - `POST /auth/refresh`
+- `POST /auth/password-reset`
+- OAuth provider callbacks
+- Email verification endpoints
+- MFA enrollment and challenge endpoints
 
 ## Testing
 
@@ -76,4 +83,4 @@ pytest
 
 ## Status
 
-Stage 0: service skeleton created. Auth models, routes, JWT handling, and tests are next.
+Stage 1: signup, login, JWT access tokens, protected user lookup, database model, and Alembic migration are implemented. Refresh tokens, OAuth, password reset, email verification, MFA, and tests are next.

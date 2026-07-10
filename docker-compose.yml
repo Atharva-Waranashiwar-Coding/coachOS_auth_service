@@ -2,6 +2,6 @@ services:
   auth-service:
     build: .
     env_file:
-      - .env.example
+      - .env
     ports:
       - "8001:8000"

@@ -1,1 +1,1 @@
-"""Core configuration for the auth service."""
+"""Core configuration, security, logging, and exception handling."""

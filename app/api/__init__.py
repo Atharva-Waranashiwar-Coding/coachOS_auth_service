@@ -1,1 +1,1 @@
-"""API routes for the auth service."""
+"""API package for the auth service."""
