@@ -5,7 +5,7 @@ from uuid import UUID
 
 import jwt
 from argon2 import PasswordHasher
-from argon2.exceptions import VerifyMismatchError, VerificationError
+from argon2.exceptions import VerificationError, VerifyMismatchError
 
 from app.core.config import settings
 from app.core.exceptions import InvalidTokenError
@@ -37,6 +37,7 @@ class TokenService:
         """Create a signed access token containing user identity claims."""
         expires_at = datetime.now(UTC) + timedelta(minutes=settings.jwt_access_token_expire_minutes)
         payload = {
+            "sub": str(user.id),
             "user_id": str(user.id),
             "email": user.email,
             "role": user.role.value,
@@ -51,12 +52,12 @@ class TokenService:
         except jwt.PyJWTError as exc:
             raise InvalidTokenError() from exc
 
-        required_claims = {"user_id", "email", "role", "exp"}
+        required_claims = {"email", "role", "exp"}
         if not required_claims.issubset(payload):
             raise InvalidTokenError()
 
         try:
-            UUID(str(payload["user_id"]))
+            UUID(str(payload.get("sub") or payload.get("user_id")))
             UserRole(str(payload["role"]))
         except (ValueError, TypeError) as exc:
             raise InvalidTokenError() from exc

@@ -9,8 +9,8 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import DuplicateEmailError, InactiveUserError, InvalidCredentialsError
 from app.core.security import password_service, token_service
-from app.models.user import User
-from app.schemas.auth import TokenResponse, UserCreate, UserLogin
+from app.models.user import User, UserRole, UserStatus
+from app.schemas.auth import TokenResponse, UserCreate, UserLogin, UserRead
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,9 @@ class AuthService:
         user = User(
             email=normalized_email,
             password_hash=password_service.hash_password(payload.password),
-            role=payload.role,
+            role=UserRole.COACH,
+            status=UserStatus.ACTIVE,
+            is_active=True,
         )
 
         self.db.add(user)
@@ -48,15 +50,19 @@ class AuthService:
     def login(self, payload: UserLogin) -> TokenResponse:
         """Authenticate a user and return an access token."""
         user = self.get_user_by_email(payload.email.lower())
-        if not user or not password_service.verify_password(payload.password, user.password_hash):
+        if (
+            not user
+            or not user.password_hash
+            or not password_service.verify_password(payload.password, user.password_hash)
+        ):
             raise InvalidCredentialsError()
 
-        if not user.is_active:
+        if not user.is_active or user.status != UserStatus.ACTIVE:
             raise InactiveUserError()
 
         access_token = token_service.create_access_token(user)
         logger.info("User logged in", extra={"user_id": str(user.id), "role": user.role.value})
-        return TokenResponse(access_token=access_token, user=user)
+        return TokenResponse(access_token=access_token, user=UserRead.model_validate(user))
 
     def get_user_by_email(self, email: str) -> User | None:
         """Return a user by normalized email address."""

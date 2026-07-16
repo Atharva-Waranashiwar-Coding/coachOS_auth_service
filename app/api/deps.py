@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.core.exceptions import ForbiddenError, InactiveUserError, InvalidTokenError
 from app.core.security import token_service
 from app.db.session import get_db
-from app.models.user import User, UserRole
+from app.models.user import User, UserRole, UserStatus
 from app.services.auth_service import AuthService
 
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -34,7 +34,7 @@ def get_current_user(
 
     if user is None:
         raise InvalidTokenError()
-    if not user.is_active:
+    if not user.is_active or user.status != UserStatus.ACTIVE:
         raise InactiveUserError()
 
     return user

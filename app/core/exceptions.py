@@ -62,6 +62,30 @@ class ForbiddenError(AppError):
     message = "You do not have permission to access this resource."
 
 
+class InvitationError(AppError):
+    status_code = status.HTTP_400_BAD_REQUEST
+    code = "invalid_invitation"
+    message = "Invitation is invalid, expired, or already used."
+
+
+class ConflictError(AppError):
+    status_code = status.HTTP_409_CONFLICT
+    code = "conflict"
+    message = "The request conflicts with existing account state."
+
+
+class RateLimitError(AppError):
+    status_code = status.HTTP_429_TOO_MANY_REQUESTS
+    code = "rate_limited"
+    message = "Too many invitation requests. Try again later."
+
+
+class UpstreamServiceError(AppError):
+    status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+    code = "upstream_service_unavailable"
+    message = "A required service is unavailable."
+
+
 def _error_response(status_code: int, code: str, message: str, details: dict | None = None) -> JSONResponse:
     """Build a consistent error response envelope."""
     return JSONResponse(

@@ -3,9 +3,9 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
-from app.models.user import UserRole
+from app.models.user import UserRole, UserStatus
 
 
 class UserCreate(BaseModel):
@@ -13,7 +13,7 @@ class UserCreate(BaseModel):
 
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
-    role: UserRole = UserRole.COACH
+    model_config = ConfigDict(extra="forbid")
 
 
 class UserLogin(BaseModel):
@@ -29,6 +29,7 @@ class UserRead(BaseModel):
     id: UUID
     email: EmailStr
     role: UserRole
+    status: UserStatus
     is_active: bool
     is_verified: bool
     created_at: datetime
@@ -51,3 +52,37 @@ class TokenPayload(BaseModel):
     user_id: UUID
     email: EmailStr
     role: UserRole
+
+
+class InternalAthleteUserCreate(BaseModel):
+    """Trusted Athlete Service request to create or reuse an athlete identity."""
+
+    email: EmailStr
+    athlete_id: UUID
+    invited_by_user_id: UUID
+    model_config = ConfigDict(extra="forbid")
+
+
+class InternalAthleteUserResponse(BaseModel):
+    auth_user_id: UUID
+    user_status: UserStatus
+    invitation_id: UUID | None
+    development_invitation_url: str | None = None
+
+
+class InvitationAcceptRequest(BaseModel):
+    token: str = Field(min_length=32, max_length=512)
+    password: str = Field(min_length=8, max_length=128)
+    password_confirmation: str = Field(min_length=8, max_length=128)
+    model_config = ConfigDict(extra="forbid")
+
+    @model_validator(mode="after")
+    def passwords_match(self) -> "InvitationAcceptRequest":
+        if self.password != self.password_confirmation:
+            raise ValueError("password confirmation does not match")
+        return self
+
+
+class InvitationAcceptResponse(BaseModel):
+    user: UserRead
+    message: str = "Invitation accepted. You can now sign in."

@@ -4,12 +4,13 @@ Authentication and authorization service for CoachOS.
 
 ## Responsibilities
 
-- Coach signup and login
-- Athlete authentication support later
+- Coach public signup and coach/athlete login
+- Controlled athlete account invitations and activation
 - Password hashing and credential validation
 - JWT access token generation
 - User role claims
 - Protected identity endpoint
+- Pending, active, and disabled account states
 
 ## Tech Stack
 
@@ -66,6 +67,14 @@ docker compose up --build
 - `POST /auth/signup`
 - `POST /auth/login`
 - `GET /auth/me`
+- `POST /auth/invitations/accept`
+- `POST /internal/v1/athlete-users`
+- `POST /internal/v1/athlete-users/{auth_user_id}/resend`
+- `POST /internal/v1/athlete-users/{auth_user_id}/disable`
+
+Public signup always creates a coach account and rejects role selection or athlete profile references. Athlete identities are created only through the authenticated Athlete Service internal API. Invitation tokens are cryptographically random, stored only as SHA-256 hashes, expire, are single-use, and are invalidated on resend. Development invitation URLs are returned only outside production when explicitly enabled.
+
+Accepting an invitation validates password confirmation, activates the pending athlete user, marks the token used, and calls the Athlete Service activation callback before committing. Disabled and pending accounts cannot log in.
 
 Future endpoints:
 
@@ -83,4 +92,4 @@ pytest
 
 ## Status
 
-Stage 1: signup, login, JWT access tokens, protected user lookup, database model, and Alembic migration are implemented. Refresh tokens, OAuth, password reset, email verification, MFA, and tests are next.
+Coach signup, role-aware login, JWT access tokens, protected user lookup, athlete invitations, activation callbacks, account disablement, Alembic migrations, and automated tests are implemented. Refresh tokens, OAuth, password reset, email verification, MFA, production email delivery, and distributed rate limiting remain future work.
