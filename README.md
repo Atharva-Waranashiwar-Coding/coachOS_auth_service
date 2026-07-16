@@ -42,6 +42,11 @@ Required values:
 - `APP_NAME`
 - `ENVIRONMENT`
 - `DATABASE_URL`
+- `JWT_SECRET_KEY`
+- `CORS_ORIGINS`
+- `METRICS_ENABLED`
+- `REQUEST_ID_HEADER`
+- `RUN_MIGRATIONS`
 
 ## Running Locally
 
@@ -53,14 +58,24 @@ uvicorn app.main:app --reload
 The service exposes:
 
 - Local app: `http://localhost:8000`
-- Docker Compose port: `http://localhost:8001`
-- Health check: `GET /health`
+- Docker Compose port: `http://localhost:8000`
+- Liveness: `GET /health/live`
+- Readiness: `GET /health/ready`
+- Metrics: `GET /metrics`
 
 ## Docker
 
 ```bash
 docker compose up --build
 ```
+
+The multi-stage image builds dependency wheels separately, runs as UID/GID `10001`, and executes `alembic upgrade head` before starting Uvicorn. Set `RUN_MIGRATIONS=false` only for non-API worker processes.
+
+## Production Operations
+
+Requests receive an `X-Request-ID` response header. Incoming IDs are propagated; otherwise the service generates a UUID. Application and request logs are emitted as JSON to stdout and include the service and request ID. Prometheus metrics expose request count, in-progress requests, and request latency labeled by method, route, status, and service.
+
+Use the central `coachos-infra` production Compose deployment for HTTPS routing, rate limiting, read-only container filesystems, monitoring, log aggregation, and database backups. Restrict `CORS_ORIGINS` to the deployed frontend origin and inject secrets only through environment variables.
 
 ## API
 

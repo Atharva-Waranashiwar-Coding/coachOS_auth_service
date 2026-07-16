@@ -21,6 +21,9 @@ class Settings(BaseSettings):
         gt=0,
     )
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
+    cors_origins: list[str] = Field(default_factory=list, alias="CORS_ORIGINS")
+    metrics_enabled: bool = Field(default=True, alias="METRICS_ENABLED")
+    request_id_header: str = Field(default="X-Request-ID", alias="REQUEST_ID_HEADER")
     internal_service_tokens: dict[str, str] = Field(default_factory=dict, alias="INTERNAL_SERVICE_TOKENS")
     athlete_invitation_expiration_hours: int = Field(
         default=48, alias="ATHLETE_INVITATION_EXPIRATION_HOURS", gt=0, le=168
@@ -51,6 +54,13 @@ class Settings(BaseSettings):
             ):
                 raise ValueError("INTERNAL_SERVICE_TOKENS must be a JSON object of strings")
             return parsed
+        return value
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, value: str | list[str]) -> list[str]:
+        if isinstance(value, str):
+            return [origin.strip() for origin in value.split(",") if origin.strip()]
         return value
 
 
